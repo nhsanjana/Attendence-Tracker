@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Attendance Tracker </title>
+<title>Attendance Tracker</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
 <style>
@@ -23,13 +23,9 @@ header button{
   background:#10b981;border:none;color:white;
   padding:8px 12px;border-radius:10px;
 }
-main{
-  flex:1;
-  min-height:calc(100vh - 120px);
-}
+main{flex:1}
 .container{max-width:650px;margin:auto;padding:16px}
 
-/* SECTIONS */
 .section{
   background:white;padding:16px;margin-bottom:16px;
   border-radius:16px;
@@ -37,19 +33,16 @@ main{
 }
 .section-title{font-weight:700;color:#4f46e5;margin-bottom:12px}
 
-/* INPUTS */
 input,select{
   width:100%;padding:10px;border-radius:12px;
   border:2px solid #e5e7eb;margin-bottom:10px;
 }
 
-/* BUTTONS */
 #addSubjectBtn{
   width:100%;padding:12px;background:#4f46e5;
   color:white;border:none;border-radius:14px;font-weight:700;
 }
 
-/* SUBJECT LIST */
 .subject-item{
   background:#f8fafc;padding:12px;
   border-left:5px solid #4f46e5;
@@ -68,19 +61,16 @@ input,select{
   border-radius:8px;font-size:12px;
 }
 
-/* ATTENDANCE */
 .attendance-buttons{
-  display:grid;grid-template-columns:repeat(2,1fr);gap:10px;
+  display:grid;grid-template-columns:repeat(3,1fr);gap:10px;
 }
 .attendance-btn{
   padding:12px;border-radius:14px;border:none;font-weight:700;
 }
 .present{background:#d1fae5;color:#047857}
 .absent{background:#fee2e2;color:#b91c1c}
-.bunk{background:#fef3c7;color:#92400e}
 .noclass{background:#e5e7eb;color:#374151}
 
-/* CALENDAR */
 #calendarSection{display:none}
 .calendar-header{
   display:flex;justify-content:space-between;align-items:center;
@@ -88,7 +78,6 @@ input,select{
 .nav-btn{
   width:36px;height:36px;border-radius:50%;
   background:#4f46e5;color:white;border:none;
-  display:flex;align-items:center;justify-content:center;
 }
 .calendar-grid{
   display:grid;grid-template-columns:repeat(7,1fr);gap:6px;
@@ -99,10 +88,8 @@ input,select{
   display:flex;align-items:center;justify-content:center;
   background:#eef2ff;font-weight:600;
 }
-.calendar-day:hover{background:#c7d2fe}
 .calendar-day.today{border:2px solid #4f46e5}
 
-/* POPUP */
 #dayPopup{
   position:fixed;left:0;right:0;bottom:0;
   background:white;border-radius:20px 20px 0 0;
@@ -117,32 +104,19 @@ input,select{
 }
 .popup-present{background:#d1fae5;color:#047857}
 .popup-absent{background:#fee2e2;color:#b91c1c}
-.popup-bunk{background:#fef3c7;color:#92400e}
+.popup-noclass{background:#e5e7eb;color:#374151}
+
 #closePopupBtn{
   width:100%;margin-top:12px;padding:12px;
   background:#ef4444;color:white;
   border:none;border-radius:14px;font-weight:700;
 }
 
-/* FOOTER */
 footer{
-  opacity:0;
-  transition:.3s;
+  opacity:0;transition:.3s;
   background:#1e293b;color:white;
   padding:16px;text-align:center;
   border-radius:16px 16px 0 0;
-}
-#localImageSection{
-  text-align:center;
-}
-
-.local-img{
-  width:100%;
-  max-width:420px;
-  border-radius:16px;
-  margin:0 auto 12px;
-  display:block;
-  box-shadow:0 8px 20px rgba(0,0,0,0.2);
 }
 </style>
 </head>
@@ -151,7 +125,7 @@ footer{
 
 <header>
   <div class="container" style="display:flex;justify-content:space-between">
-    <strong>The 'I Paid For This' Reminder</strong>
+    <strong>Attendance Log</strong>
     <button id="toggleCalendar">Calendar</button>
   </div>
 </header>
@@ -174,7 +148,6 @@ footer{
   <div class="attendance-buttons">
     <button class="attendance-btn present" data-s="present">Present</button>
     <button class="attendance-btn absent" data-s="absent">Absent</button>
-    <button class="attendance-btn bunk" data-s="bunk">Bunk</button>
     <button class="attendance-btn noclass" data-s="no-class">No Class</button>
   </div>
 </section>
@@ -187,16 +160,27 @@ footer{
   </div>
   <div class="calendar-grid" id="calendarGrid"></div>
 </section>
-<section class="section" id="localImageSection">
-  <img src="images/meme.jpeg" alt="Local image" class="local-img">
+<section class="section">
+  <!-- <div class="section-title">😂 Daily Attendance Meme</div> -->
+  <img id="dailyMemeImg" style="
+    width:100%;
+    max-width:420px;
+    display:block;
+    margin:auto;
+    border-radius:16px;
+    box-shadow:0 8px 20px rgba(0,0,0,.2);
+  ">
+  <!-- <p style="text-align:center;font-size:13px;color:#475569">
+    One meme per day 😌
+  </p> -->
 </section>
+
 </main>
 
 <footer id="footer">
-  🚫 STOP SCROLLING 🚫
-You have officially reached the bottom of the page.
-There is no more attendance data to see here.<br>
-&copy; sanjana nh
+  🚫 STOP SCROLLING 🚫<br>
+  You reached the bottom.<br>
+  &copy; sanjana nh
 </footer>
 
 <div id="dayPopup">
@@ -206,12 +190,13 @@ There is no more attendance data to see here.<br>
 </div>
 
 <script>
-let subjects=[],logs=[],selectedDate=new Date();
-let cm=selectedDate.getMonth(),cy=selectedDate.getFullYear();
+let subjects=[],logs=[];
+let today=new Date();
+let cm=today.getMonth(),cy=today.getFullYear();
+
 const $=id=>document.getElementById(id);
 const fmt=d=>d.toISOString().split("T")[0];
 
-/* STORAGE */
 function load(){
   subjects=JSON.parse(localStorage.getItem("attendanceSubjects")||"[]");
   logs=JSON.parse(localStorage.getItem("attendanceLogs")||"[]");
@@ -221,7 +206,6 @@ function save(){
   localStorage.setItem("attendanceLogs",JSON.stringify(logs));
 }
 
-/* STATS */
 function stats(name){
   const valid=logs.filter(l=>l.subject===name && l.status!=="no-class");
   const attended=valid.filter(l=>l.status==="present").length;
@@ -229,7 +213,6 @@ function stats(name){
   return {attended,total,percent:total?Math.round(attended/total*100):0};
 }
 
-/* SUBJECTS */
 function renderSubjects(){
   $("subjectsList").innerHTML="";
   $("subjectSelect").innerHTML='<option value="">Select subject</option>';
@@ -257,7 +240,8 @@ function addSubject(){
   const t=parseInt($("targetInput").value)||75;
   if(!n)return;
   subjects.push({name:n,target:t});
-  $("subjectInput").value="";$("targetInput").value="";
+  $("subjectInput").value="";
+  $("targetInput").value="";
   save();renderSubjects();
 }
 
@@ -269,18 +253,16 @@ function deleteSubject(i){
   save();renderSubjects();renderCalendar();
 }
 
-/* ATTENDANCE */
 function markAttendance(status){
   const sub=$("subjectSelect").value;
   if(!sub)return;
-  const d=fmt(selectedDate);
+  const d=fmt(today);
   const i=logs.findIndex(l=>l.date===d&&l.subject===sub);
   if(i>-1)logs[i].status=status;
   else logs.push({date:d,subject:sub,status});
   save();renderSubjects();
 }
 
-/* CALENDAR */
 function renderCalendar(){
   $("calendarGrid").innerHTML="";
   $("monthYear").textContent=new Date(cy,cm).toLocaleString("default",{month:"long",year:"numeric"});
@@ -289,19 +271,16 @@ function renderCalendar(){
   for(let i=0;i<first;i++)$("calendarGrid").innerHTML+="<div></div>";
   for(let d=1;d<=days;d++){
     const cell=document.createElement("div");
-    cell.className="calendar-day";
     const date=new Date(cy,cm,d);
+    cell.className="calendar-day";
     cell.textContent=d;
-    if(fmt(date)===fmt(new Date()))cell.classList.add("today");
+    if(fmt(date)===fmt(today))cell.classList.add("today");
     cell.onclick=()=>openPopup(date);
     $("calendarGrid").appendChild(cell);
   }
 }
 
-/* POPUP */
 function openPopup(date){
-  selectedDate=date;
-  $("selectedDate").textContent=fmt(date);
   $("dayPopup").style.display="block";
   $("popupDate").textContent=fmt(date);
   $("popupSubjects").innerHTML="";
@@ -313,31 +292,28 @@ function openPopup(date){
         <strong>${s.name}</strong>
         <div>Status: ${status}</div>
         <div class="popup-actions">
-          <button class="popup-present" onclick="setPopup('${s.name}','present')">Present</button>
-          <button class="popup-absent" onclick="setPopup('${s.name}','absent')">Absent</button>
-          <button class="popup-bunk" onclick="setPopup('${s.name}','bunk')">Bunk</button>
+          <button class="popup-present" onclick="setPopup('${s.name}','present','${fmt(date)}')">Present</button>
+          <button class="popup-absent" onclick="setPopup('${s.name}','absent','${fmt(date)}')">Absent</button>
+          <button class="popup-noclass" onclick="setPopup('${s.name}','no-class','${fmt(date)}')">No Class</button>
         </div>
       </div>`;
   });
 }
-function setPopup(sub,status){
-  const d=fmt(selectedDate);
-  const i=logs.findIndex(l=>l.date===d&&l.subject===sub);
+
+function setPopup(sub,status,date){
+  const i=logs.findIndex(l=>l.date===date&&l.subject===sub);
   if(i>-1)logs[i].status=status;
-  else logs.push({date:d,subject:sub,status});
-  save();renderSubjects();openPopup(selectedDate);
+  else logs.push({date,subject:sub,status});
+  save();renderSubjects();openPopup(new Date(date));
 }
 
-/* FOOTER VISIBILITY */
 const footer=$("footer");
 function handleFooter(){
   footer.style.opacity=
     (window.scrollY+window.innerHeight>=document.documentElement.scrollHeight-5)?"1":"0";
 }
 window.addEventListener("scroll",handleFooter);
-window.addEventListener("resize",handleFooter);
 
-/* EVENTS */
 $("addSubjectBtn").onclick=addSubject;
 document.querySelectorAll(".attendance-btn").forEach(b=>b.onclick=()=>markAttendance(b.dataset.s));
 $("toggleCalendar").onclick=()=>{
@@ -349,11 +325,69 @@ $("prevMonth").onclick=()=>{cm--;if(cm<0){cm=11;cy--}renderCalendar();}
 $("nextMonth").onclick=()=>{cm++;if(cm>11){cm=0;cy++}renderCalendar();}
 $("closePopupBtn").onclick=()=>$("dayPopup").style.display="none";
 
-/* INIT */
 load();
 renderSubjects();
-$("selectedDate").textContent=fmt(selectedDate);
+$("selectedDate").textContent=fmt(today);
 handleFooter();
+
+/* ===============================
+   DAILY LOCAL GIF SYSTEM
+   EDIT ONLY THIS LIST IF NEEDED
+   =============================== */
+
+const MEMES = [
+  "images/1.gif",
+  "images/2.gif",
+  "images/3.gif",
+  "images/4.gif",
+  "images/5.gif",
+  "images/6.gif",
+  "images/7.gif",
+  "images/8.gif",
+  "images/9.gif",
+  "images/10.gif",
+  "images/11.gif",
+  "images/12.gif",
+  "images/13.gif",
+  "images/14.gif",
+  "images/15.gif",
+  "images/16.gif",
+   "images/17.gif",
+  "images/18.gif",
+  "images/19.gif",
+  "images/20.gif",
+  "images/21.gif",
+  "images/22.gif",
+  "images/23.gif",
+  "images/24.gif",
+  "images/25.gif",
+  "images/26.gif",
+  "images/27.gif",
+  "images/28.gif",
+  "images/29.gif",
+  "images/30.gif",
+  "images/31.gif",
+  "images/32.gif",
+
+];
+
+/* DO NOT TOUCH BELOW THIS */
+function loadDailyMeme(){
+  const startDate = new Date(2024, 0, 1); // fixed reference
+  const today = new Date();
+
+  const dayDiff = Math.floor(
+    (today - startDate) / (1000 * 60 * 60 * 24)
+  );
+
+  const memeIndex = dayDiff % MEMES.length;
+
+  document.getElementById("dailyMemeImg").src = MEMES[memeIndex];
+}
+
+// Call once page loads
+loadDailyMeme();
+
 </script>
 
 </body>
