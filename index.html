@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Attendance Tracker</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:system-ui;}
+body{
+  background:linear-gradient(135deg,#eef2ff,#c7d2fe);
+  min-height:100vh;
+  display:flex;
+  flex-direction:column;
+}
+header{
+  position:sticky;top:0;z-index:10;
+  background:#4f46e5;color:white;
+  padding:16px;border-radius:0 0 16px 16px;
+}
+header button{
+  background:#10b981;border:none;color:white;
+  padding:8px 12px;border-radius:10px;
+}
+main{flex:1}
+.container{max-width:650px;margin:auto;padding:16px}
+
+.section{
+  background:white;padding:16px;margin-bottom:16px;
+  border-radius:16px;
+  box-shadow:0 4px 10px rgba(0,0,0,.1);
+}
+.section-title{font-weight:700;color:#4f46e5;margin-bottom:12px}
+
+input,select{
+  width:100%;padding:10px;border-radius:12px;
+  border:2px solid #e5e7eb;margin-bottom:10px;
+}
+
+#addSubjectBtn{
+  width:100%;padding:12px;background:#4f46e5;
+  color:white;border:none;border-radius:14px;font-weight:700;
+}
+
+.subject-item{
+  background:#f8fafc;padding:12px;
+  border-left:5px solid #4f46e5;
+  border-radius:12px;margin-bottom:10px;
+}
+.subject-title{
+  display:flex;justify-content:space-between;align-items:center;
+  font-weight:700;
+}
+.subject-meta{font-size:13px;margin-top:6px}
+.good{color:#047857;font-weight:700}
+.bad{color:#b91c1c;font-weight:700}
+.delete-btn{
+  background:#ef4444;color:white;
+  border:none;padding:4px 8px;
+  border-radius:8px;font-size:12px;
+}
+
+.attendance-buttons{
+  display:grid;grid-template-columns:repeat(3,1fr);gap:10px;
+}
+.attendance-btn{
+  padding:12px;border-radius:14px;border:none;font-weight:700;
+}
+.present{background:#d1fae5;color:#047857}
+.absent{background:#fee2e2;color:#b91c1c}
+.noclass{background:#e5e7eb;color:#374151}
+
+#calendarSection{display:none}
+.calendar-header{
+  display:flex;justify-content:space-between;align-items:center;
+}
+.nav-btn{
+  width:36px;height:36px;border-radius:50%;
+  background:#4f46e5;color:white;border:none;
+}
+.calendar-grid{
+  display:grid;grid-template-columns:repeat(7,1fr);gap:6px;
+  margin-top:10px;
+}
+.calendar-day{
+  aspect-ratio:1;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  background:#eef2ff;font-weight:600;
+}
+.calendar-day.today{border:2px solid #4f46e5}
+
+#dayPopup{
+  position:fixed;left:0;right:0;bottom:0;
+  background:white;border-radius:20px 20px 0 0;
+  padding:16px;display:none;z-index:100;
+  box-shadow:0 -6px 20px rgba(0,0,0,.25);
+  max-height:85vh;
+  overflow-y:auto;
+}
+
+.popup-row{margin-bottom:12px}
+.popup-actions{display:flex;gap:8px;margin-top:6px}
+.popup-actions button{
+  flex:1;padding:8px;border:none;border-radius:10px;
+  font-size:12px;font-weight:600;
+}
+.popup-present{background:#d1fae5;color:#047857}
+.popup-absent{background:#fee2e2;color:#b91c1c}
+.popup-noclass{background:#e5e7eb;color:#374151}
+
+#closePopupBtn{
+  width:100%;margin-top:12px;padding:12px;
+  background:#ef4444;color:white;
+  border:none;border-radius:14px;font-weight:700;
+}
+
+footer{
+  opacity:0;transition:.3s;
+  background:#1e293b;color:white;
+  padding:16px;text-align:center;
+  border-radius:16px 16px 0 0;
+}
+</style>
+</head>
+
+<body>
+
+<header>
+  <div class="container" style="display:flex;justify-content:space-between">
+    <strong>Attendance Log</strong>
+    <button id="toggleCalendar">Calendar</button>
+  </div>
+</header>
+
+<main class="container">
+
+<section class="section">
+  <div class="section-title">Subjects</div>
+  <input id="subjectInput" placeholder="Subject name">
+  <input id="targetInput" type="number" placeholder="Target % (75)">
+  <button id="addSubjectBtn">+ Add Subject</button>
+  <div id="subjectsList"></div>
+</section>
+
+<section class="section">
+  <div class="section-title">
+    Mark Attendance – <span id="selectedDate"></span>
+  </div>
+  <select id="subjectSelect"><option value="">Select subject</option></select>
+  <div class="attendance-buttons">
+    <button class="attendance-btn present" data-s="present">Present</button>
+    <button class="attendance-btn absent" data-s="absent">Absent</button>
+    <button class="attendance-btn noclass" data-s="no-class">No Class</button>
+  </div>
+</section>
+
+<section class="section" id="calendarSection">
+  <div class="calendar-header">
+    <button class="nav-btn" id="prevMonth"><i class="fas fa-chevron-left"></i></button>
+    <strong id="monthYear"></strong>
+    <button class="nav-btn" id="nextMonth"><i class="fas fa-chevron-right"></i></button>
+  </div>
+  <div class="calendar-grid" id="calendarGrid"></div>
+</section>
+
+<!-- ✅ FIX: MISSING MEME IMAGE -->
+<section class="section">
+  <img id="dailyMemeImg" style="
+    width:100%;
+    max-width:420px;
+    display:block;
+    margin:auto;
+    border-radius:16px;
+    box-shadow:0 8px 20px rgba(0,0,0,.2);
+  ">
+</section>
+
+</main>
+
+<footer id="footer">© sanjana nh</footer>
+
+<div id="dayPopup">
+  <strong id="popupDate"></strong>
+  <div id="popupSubjects"></div>
+  <button id="closePopupBtn">Close</button>
+</div>
+
+
+
+
+<script>
+let subjects=[],logs=[];
+let today=new Date();
+let cm=today.getMonth(),cy=today.getFullYear();
+let selectedCalendarDate;
+
+/* ✅ SINGLE, CORRECT DATE FORMATTER */
+const fmt = d => {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2,"0");
+  const day = String(d.getDate()).padStart(2,"0");
+  return `${y}-${m}-${day}`;
+};
+
+const $=id=>document.getElementById(id);
+
+function load(){
+  subjects=JSON.parse(localStorage.getItem("attendanceSubjects")||"[]");
+  logs=JSON.parse(localStorage.getItem("attendanceLogs")||"[]");
+}
+function save(){
+  localStorage.setItem("attendanceSubjects",JSON.stringify(subjects));
+  localStorage.setItem("attendanceLogs",JSON.stringify(logs));
+}
+
+function stats(name){
+  const valid=logs.filter(l=>l.subject===name && l.status!=="no-class");
+  const attended=valid.filter(l=>l.status==="present").length;
+  const total=valid.length;
+  return {attended,total,percent:total?Math.round(attended/total*100):0};
+}
+
+function renderSubjects(){
+  $("subjectsList").innerHTML="";
+  $("subjectSelect").innerHTML='<option value="">Select subject</option>';
+  subjects.forEach((s,i)=>{
+    const st=stats(s.name);
+    $("subjectsList").innerHTML+=`
+    <div class="subject-item">
+      <div class="subject-title">
+        <span>${s.name}</span>
+        <button class="delete-btn" onclick="deleteSubject(${i})">Delete</button>
+      </div>
+      <div class="subject-meta">
+        Attended: ${st.attended}/${st.total}<br>
+        Attendance:
+        <span class="${st.percent>=s.target?'good':'bad'}">${st.percent}%</span>
+        (Target ${s.target}%)
+      </div>
+    </div>`;
+    $("subjectSelect").innerHTML+=`<option>${s.name}</option>`;
+  });
+}
+
+function addSubject(){
+  const n=$("subjectInput").value.trim();
+  const t=parseInt($("targetInput").value)||75;
+  if(!n)return;
+  subjects.push({name:n,target:t});
+  $("subjectInput").value="";
+  $("targetInput").value="";
+  save();renderSubjects();
+}
+
+function deleteSubject(i){
+  const name=subjects[i].name;
+  if(!confirm(`Delete "${name}" and all attendance?`))return;
+  subjects.splice(i,1);
+  logs=logs.filter(l=>l.subject!==name);
+  save();renderSubjects();renderCalendar();
+}
+
+function markAttendance(status){
+  const sub=$("subjectSelect").value;
+  if(!sub)return;
+  const d=selectedCalendarDate;
+  const i=logs.findIndex(l=>l.date===d&&l.subject===sub);
+  if(i>-1)logs[i].status=status;
+  else logs.push({date:d,subject:sub,status});
+  save();renderSubjects();
+}
+
+function renderCalendar(){
+  $("calendarGrid").innerHTML="";
+  $("monthYear").textContent=new Date(cy,cm).toLocaleString("default",{month:"long",year:"numeric"});
+  const first=new Date(cy,cm,1).getDay();
+  const days=new Date(cy,cm+1,0).getDate();
+  for(let i=0;i<first;i++)$("calendarGrid").innerHTML+="<div></div>";
+  for(let d=1;d<=days;d++){
+    const cell=document.createElement("div");
+    const date=new Date(cy,cm,d);
+    cell.className="calendar-day";
+    cell.textContent=d;
+    if(fmt(date)===fmt(today))cell.classList.add("today");
+    cell.onclick=()=>openPopup(date);
+    $("calendarGrid").appendChild(cell);
+  }
+}
+
+function openPopup(date){
+  selectedCalendarDate=fmt(date);
+  $("selectedDate").textContent=selectedCalendarDate;
+  $("dayPopup").style.display="block";
+  $("popupDate").textContent=selectedCalendarDate;
+  $("popupSubjects").innerHTML="";
+  subjects.forEach(s=>{
+    const log=logs.find(l=>l.date===selectedCalendarDate&&l.subject===s.name);
+    const status=log?log.status:"no-class";
+    $("popupSubjects").innerHTML+=`
+    <div class="popup-row">
+      <strong>${s.name}</strong>
+      <div>Status: ${status}</div>
+      <div class="popup-actions">
+        <button class="popup-present" onclick="setPopup('${s.name}','present')">Present</button>
+        <button class="popup-absent" onclick="setPopup('${s.name}','absent')">Absent</button>
+        <button class="popup-noclass" onclick="setPopup('${s.name}','no-class')">No Class</button>
+      </div>
+    </div>`;
+  });
+}
+
+function setPopup(sub,status){
+  const i=logs.findIndex(l=>l.date===selectedCalendarDate&&l.subject===sub);
+  if(i>-1)logs[i].status=status;
+  else logs.push({date:selectedCalendarDate,subject:sub,status});
+  save();renderSubjects();openPopup(new Date(selectedCalendarDate));
+}
+
+const footer=$("footer");
+window.addEventListener("scroll",()=>footer.style.opacity=
+  window.scrollY+window.innerHeight>=document.documentElement.scrollHeight-5?"1":"0"
+);
+
+$("addSubjectBtn").onclick=addSubject;
+document.querySelectorAll(".attendance-btn").forEach(b=>b.onclick=()=>markAttendance(b.dataset.s));
+$("toggleCalendar").onclick=()=>{
+  $("calendarSection").style.display=$("calendarSection").style.display==="block"?"none":"block";
+  renderCalendar();
+};
+$("prevMonth").onclick=()=>{cm--;if(cm<0){cm=11;cy--}renderCalendar();}
+$("nextMonth").onclick=()=>{cm++;if(cm>11){cm=0;cy++}renderCalendar();}
+$("closePopupBtn").onclick=()=>$("dayPopup").style.display="none";
+
+load();
+selectedCalendarDate=fmt(today);
+$("selectedDate").textContent=selectedCalendarDate;
+renderSubjects();
+
+const MEMES=[ "images/1.gif","images/2.gif","images/3.gif","images/4.gif","images/5.gif","images/6.gif","images/7.gif","images/8.gif","images/9.gif","images/10.gif","images/11.gif","images/12.gif","images/13.gif","images/14.gif","images/15.gif","images/16.gif","images/17.gif","images/18.gif","images/19.gif","images/20.gif","images/21.gif","images/22.gif","images/23.gif","images/24.gif","images/25.gif","images/26.gif","images/27.gif","images/28.gif","images/29.gif","images/30.gif","images/31.gif","images/32.gif" ];
+
+function loadDailyMeme(){
+  const start=new Date(2024,0,1);
+  const now=new Date();
+  const diff=Math.floor((now-start)/(1000*60*60*24));
+  $("dailyMemeImg").src=MEMES[diff%MEMES.length];
+}
+loadDailyMeme();
+</script>
+
+</body>
+</html>
